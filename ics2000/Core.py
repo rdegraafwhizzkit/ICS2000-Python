@@ -157,13 +157,7 @@ class Hub:
         cmd.setmagic()
         cmd.setentityid(entity)
         cmd.setdata(
-            json.dumps({
-                'module': {
-                    'id': str(entity),
-                    'function': str(function),
-                    'value': str(value),
-                }
-            }),
+            json.dumps({'module': {'id': entity, 'function': function, 'value': value}}, separators=(',', ':')),
             self.aes
         )
         return cmd
@@ -183,5 +177,4 @@ def get_hub(mac, email, password) -> Optional[Hub]:
     if resp.status_code == 200:
         if ast.literal_eval(resp.text)[1] == "true":
             return Hub(mac, email, password)
-    else:
-        raise CoreException(f'Could not create a Hub object for mac/user {mac}/{email}')
+    raise CoreException(f'Could not create a Hub object for mac/user {mac}/{email}')
