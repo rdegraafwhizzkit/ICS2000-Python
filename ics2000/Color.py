@@ -1,4 +1,5 @@
 from ics2000.Bytes import *
+import logging
 
 
 def rgb_constrained(inp) -> int:
@@ -10,7 +11,7 @@ def rgb_constrained(inp) -> int:
         return round(inp)
 
 
-class rgb:
+class RGB:
     def __init__(self, r, g, b):
         self.r = rgb_constrained(r)
         self.g = rgb_constrained(g)
@@ -53,7 +54,7 @@ class rgb:
         y = 1 / (xyx.x + y2 + xyx.z)
         f1 = int(x * MAX_UINT_16)
         f2 = int(y * MAX_UINT_16)
-        print("saving: " + str(f1) + " : " + str(f2))
+        logging.debug(f'Saving: {str(f1)} : {str(f2)}')
         arr = bytearray(4)
         insertint16(arr, f1 * 100, 0)
         insertint16(arr, f2 * 100, 2)
@@ -98,7 +99,7 @@ class Xyz:
         f1 /= f9
         f2 /= f9
         f3 /= f9
-        return rgb(rgb_constrained(f1 * 255), rgb_constrained(f2 * 255), rgb_constrained(f3 * 255))
+        return RGB(rgb_constrained(f1 * 255), rgb_constrained(f2 * 255), rgb_constrained(f3 * 255))
 
     def __str__(self):
         return str([self.x, self.y, self.z])

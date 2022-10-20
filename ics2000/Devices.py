@@ -1,4 +1,5 @@
 from typing import Optional
+import logging
 
 
 class Device:
@@ -7,21 +8,22 @@ class Device:
         self._hub = hb
         self._name = name
         self._id = entity_id
-        print(str(self._name) + " : " + str(self._id))
+        logging.info(f'{str(self._name)} : {str(self._id)}')
 
+    @property
     def name(self):
         return self._name
 
-    def turnoff(self):
+    def turn_off(self):
         cmd = self._hub.getcmdswitch(self._id, False)
-        self._hub.sendcommand(cmd.getcommand())
+        self._hub.send_command(cmd.getcommand())
 
-    def turnon(self):
+    def turn_on(self):
         cmd = self._hub.getcmdswitch(self._id, True)
-        self._hub.sendcommand(cmd.getcommand())
+        self._hub.send_command(cmd.getcommand())
 
-    def getstatus(self) -> Optional[bool]:
-        return self._hub.getlampstatus(self._id)
+    def get_status(self) -> Optional[bool]:
+        return self._hub.get_lamp_status(self._id)
 
 
 class Dimmer(Device):
@@ -30,4 +32,4 @@ class Dimmer(Device):
         if level < 0 or level > 15:
             return
         cmd = super()._hub.getcmddim(super()._hub, level)
-        super()._hub.sendcommand(cmd.getcommand())
+        super()._hub.send_command(cmd.getcommand())

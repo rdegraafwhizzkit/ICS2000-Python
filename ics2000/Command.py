@@ -1,6 +1,6 @@
-import numpy as np
 from ics2000.Cryptographer import *
 from ics2000.Bytes import *
+
 
 class Command:
 
@@ -35,10 +35,3 @@ class Command:
     def getcommand(self) -> str:
         insertint16(self._header, len(self._data), 41)
         return self._header.hex() + self._data.hex()
-
-
-
-
-
-
-
