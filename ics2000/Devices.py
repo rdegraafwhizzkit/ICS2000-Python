@@ -1,7 +1,6 @@
 from typing import Optional
 import logging
-
-import Core
+from . import Core
 
 
 class Device:
