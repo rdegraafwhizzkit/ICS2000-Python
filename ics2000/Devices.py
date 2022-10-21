@@ -1,6 +1,5 @@
 from typing import Optional
 import logging
-from . import Core
 
 
 class Device:
@@ -16,7 +15,7 @@ class Device:
         return self._id
 
     @property
-    def hub(self) -> Core.Hub:
+    def hub(self):
         return self._hub
 
     @property
