@@ -1,7 +1,7 @@
 from typing import Optional
 import logging
 
-import ics2000.Core
+import Core
 
 
 class Device:
@@ -17,7 +17,7 @@ class Device:
         return self._id
 
     @property
-    def hub(self) -> ics2000.Core.Hub:
+    def hub(self) -> Core.Hub:
         return self._hub
 
     @property
