@@ -11,6 +11,14 @@ class Device:
         logging.info(f'{str(self._name)} : {str(self._id)}')
 
     @property
+    def id(self):
+        return self._id
+
+    @property
+    def hub(self):
+        return self._hub
+
+    @property
     def name(self):
         return self._name
 
