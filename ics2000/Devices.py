@@ -1,6 +1,8 @@
 from typing import Optional
 import logging
 
+import ics2000.Core
+
 
 class Device:
 
@@ -11,15 +13,15 @@ class Device:
         logging.info(f'{str(self._name)} : {str(self._id)}')
 
     @property
-    def id(self):
+    def id(self) -> int:
         return self._id
 
     @property
-    def hub(self):
+    def hub(self) -> ics2000.Core.Hub:
         return self._hub
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     def turn_off(self):
