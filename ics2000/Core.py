@@ -83,7 +83,7 @@ class Hub:
                 if dev == DeviceType.OPEN_CLOSE:
                     self._devices.append(Device(name, entity_id, self))
                 if dev == DeviceType.DIMMABLE_LAMP:
-                    self._devices.append(Device(name, entity_id, self))
+                    self._devices.append(Dimmer(name, entity_id, self))
             else:
                 pass  # TODO: log something here
 
