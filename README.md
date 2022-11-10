@@ -4,10 +4,15 @@ Forked from https://github.com/Stijn-Jacobs/ICS2000-Python
 
 Example usage:
 ```
+from ics2000.Core import get_hub
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
 hub = get_hub(
-  "Mac address of ics2000", 
-  "email", 
-  "password"
+    'Mac address of ics2000',
+    'email',
+    'password'
 )
 ```
 
