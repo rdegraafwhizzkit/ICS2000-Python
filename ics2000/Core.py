@@ -3,6 +3,8 @@ import requests
 import json
 import ast
 import logging
+import socket
+import time
 
 from ics2000.Cryptographer import decrypt
 from ics2000.Command import Command
@@ -179,3 +181,22 @@ def get_hub(mac, email, password) -> Optional[Hub]:
         if ast.literal_eval(resp.text)[1] == "true":
             return Hub(mac, email, password)
     raise CoreException(f'Could not create a Hub object for mac/user {mac}/{email}')
+
+
+def get_hub_ip(timeout: int = 10) -> str:
+    msg = bytes.fromhex('010003ffffffffffffca000000010400044795000401040004000400040000000000000000020000003000')
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    sock.sendto(msg, ('255.255.255.255', 2012))
+    sock.setblocking(0)
+    ip_address = None
+    end_at = int(time.time()) + timeout
+    while not ip_address and int(time.time()) < end_at:
+        try:
+            _, addr = sock.recvfrom(1024)
+            ip_address = addr[0]
+        except BlockingIOError:
+            pass
+    sock.close()
+
+    return ip_address
