@@ -39,6 +39,7 @@ class Hub:
         self._devices = []
         self.login_user()
         self.pull_devices()
+        self.ip_address = get_hub_ip()
 
     def login_user(self):
         logging.debug("Logging in user")
