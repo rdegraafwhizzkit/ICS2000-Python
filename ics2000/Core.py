@@ -95,40 +95,56 @@ class Hub:
     def devices(self):
         return self._devices
 
-    def send_command(self, command):
+    def send_command_tcp(self, command):
         url = f'{Hub.base_url}/command.php'
+        logging.info(f'Using TCP to send command to {url}')
         params = {"action": "add", "email": self._email, "mac": self.mac.replace(":", ""),
                   "password_hash": self._password, "device_unique_id": "android", "command": command}
         response = requests.get(url, params=params)
         if 200 != response.status_code:
             raise CoreException(f'Could not send command {command}: {response.text}')
 
+    def send_command_udp(self, command):
+        logging.info(f'Using UDP to send command to {self.ip_address}')
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.sendto(command, (self.ip_address, 2012))
+        sock.close()
+
     def turn_off(self, entity):
         cmd = self.simple_command(entity, 0, 0)
-        self.send_command(cmd.getcommand())
+        if self.ip_address:
+            self.send_command_udp(cmd.getcommandbytes())
+        else:
+            self.send_command_tcp(cmd.getcommand())
 
     def turn_on(self, entity):
         cmd = self.simple_command(entity, 0, 1)
-        self.send_command(cmd.getcommand())
+        if self.ip_address:
+            self.send_command_udp(cmd.getcommandbytes())
+        else:
+            self.send_command_tcp(cmd.getcommand())
 
     def dim(self, entity, level):
         # level is in range 1-10
         cmd = self.simple_command(entity, 1, level)
-        self.send_command(cmd.getcommand())
+        if self.ip_address:
+            self.send_command_udp(cmd.getcommandbytes())
+        else:
+            self.send_command_tcp(cmd.getcommand())
 
     def zigbee_color_temp(self, entity, color_temp):
         color_temp = constraint_int(color_temp, 0, 600)
         cmd = self.simple_command(entity, 9, color_temp)
-        self.send_command(cmd.getcommand())
+        self.send_command_tcp(cmd.getcommand())
 
     def zigbee_dim(self, entity, dim_lvl):
         dim_lvl = constraint_int(dim_lvl, 1, 254)
         cmd = self.simple_command(entity, 4, dim_lvl)
-        self.send_command(cmd.getcommand())
+        self.send_command_tcp(cmd.getcommand())
 
     def zigbee_switch(self, entity, power):
         cmd = self.simple_command(entity, 3, (str(1) if power else str(0)))
-        self.send_command(cmd.getcommand())
+        self.send_command_tcp(cmd.getcommand())
 
     def get_device_status(self, entity) -> []:
         url = f'{Hub.base_url}/entity.php'
@@ -189,7 +205,7 @@ def get_hub_ip(timeout: int = 10) -> str:
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     sock.sendto(msg, ('255.255.255.255', 2012))
-    sock.setblocking(0)
+    sock.setblocking(False)
     ip_address = None
     end_at = int(time.time()) + timeout
     while not ip_address and int(time.time()) < end_at:
