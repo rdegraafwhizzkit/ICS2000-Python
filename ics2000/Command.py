@@ -1,5 +1,5 @@
-from ics2000.Cryptographer import *
-from ics2000.Bytes import *
+from ics2000.Cryptographer import encrypt
+from ics2000.Bytes import np, insertbytes, insertint16, insertint32
 
 
 class Command:
@@ -31,7 +31,12 @@ class Command:
 
     def setdata(self, data, aes):
         self._data = encrypt(data, aes)
+        insertint16(self._header, len(self._data), 41)
 
     def getcommand(self) -> str:
-        insertint16(self._header, len(self._data), 41)
+        """ Return hex string for header and data combined """
         return self._header.hex() + self._data.hex()
+
+    def getcommandbytes(self) -> bytearray:
+        """ Return bytearray for header and data combined """
+        return self._header + self._data

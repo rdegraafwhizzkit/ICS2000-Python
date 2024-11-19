@@ -1,4 +1,4 @@
-from ics2000.Bytes import *
+from ics2000.Bytes import MAX_UINT_16, byte_to_int4, insertint16
 import logging
 
 

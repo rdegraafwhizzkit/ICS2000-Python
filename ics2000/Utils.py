@@ -1,5 +1,5 @@
-from ics2000.Color import *
-from ics2000.Bytes import *
+from ics2000.Color import Xyz
+from ics2000.Bytes import insertint32, MAX_UINT_16, byte_to_int2
 import logging
 
 
