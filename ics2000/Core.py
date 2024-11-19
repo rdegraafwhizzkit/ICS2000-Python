@@ -4,7 +4,8 @@ import json
 import ast
 import logging
 
-from ics2000.Command import decrypt, Command
+from ics2000.Cryptographer import decrypt
+from ics2000.Command import Command
 from ics2000.Devices import Device, Dimmer, Optional
 
 
