@@ -8,7 +8,7 @@ import time
 
 from ics2000.Cryptographer import decrypt
 from ics2000.Command import Command
-from ics2000.Devices import Device, Dimmer, Optional
+from ics2000.Devices import Device, Light, Dimmer, Optional, TemperatureHumiditySensor
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,18 +77,24 @@ class Hub:
                 decrypted = decrypted["module"]
                 name = decrypted["name"]
                 entity_id = decrypted["id"]
-                if decrypted["device"] not in device_type_values:
+                decrypted_device = decrypted["device"]
+                logging.debug(f'Device is {decrypted_device}')
+                if decrypted_device not in device_type_values:
                     self._devices.append(Device(name, entity_id, self))
                     continue
-                dev = DeviceType(decrypted["device"])
+                dev = DeviceType(decrypted_device)
+                logging.debug(f'Device type is {decrypted_device}')
                 if dev == DeviceType.LAMP:
-                    self._devices.append(Device(name, entity_id, self))
-                if dev == DeviceType.DIMMER:
+                    self._devices.append(Light(name, entity_id, self))
+                elif dev == DeviceType.DIMMER:
                     self._devices.append(Dimmer(name, entity_id, self))
-                if dev == DeviceType.OPEN_CLOSE:
-                    self._devices.append(Device(name, entity_id, self))
-                if dev == DeviceType.DIMMABLE_LAMP:
+                elif dev == DeviceType.OPEN_CLOSE:
+                    self._devices.append(Light(name, entity_id, self))
+                elif dev == DeviceType.DIMMABLE_LAMP:
                     self._devices.append(Dimmer(name, entity_id, self))
+                elif dev == DeviceType.ZIGBEE_TEMPERATURE_AND_HUMIDITY_SENSOR:
+                    self._devices.append(TemperatureHumiditySensor(name, entity_id, self))
+
             else:
                 pass  # TODO: log something here
 
@@ -171,6 +177,18 @@ class Hub:
             return True if status[0] == 1 else False
         return False
 
+    def get_temperature(self, entity):
+        status = self.get_device_status(entity)
+        if len(status) >= 1:
+            return round(status[4]/100.0,2)
+        return -1
+
+    def get_humidity(self, entity):
+        status = self.get_device_status(entity)
+        if len(status) >= 1:
+            return round(status[11]/100.0,2)
+        return -1
+    
     def simple_command(self, entity, function, value):
         cmd = Command()
         cmd.setmac(self.mac)
@@ -188,7 +206,8 @@ class DeviceType(enum.Enum):
     LAMP = 1
     DIMMER = 2
     OPEN_CLOSE = 3
-    DIMMABLE_LAMP = 24
+    DIMMABLE_LAMP = 24,
+    ZIGBEE_TEMPERATURE_AND_HUMIDITY_SENSOR = 46
 
 
 def get_hub(mac, email, password) -> Optional[Hub]:
