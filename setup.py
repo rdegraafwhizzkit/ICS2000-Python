@@ -5,13 +5,13 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="ics2000",
-    version="0.1.0",
+    version="0.2.0",
     author="Rutger de Graaf",
     author_email="",
     description="Trust ICS-2000 Python library",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/rdegraafwhizzkit/ics2000-python",
+    url="https://github.com/FRvanderVeen/ics2000-python",
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
