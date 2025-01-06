@@ -8,8 +8,9 @@ import time
 
 from ics2000.Cryptographer import decrypt
 from ics2000.Command import Command
-from ics2000.Devices import Device, Dimmer, Optional
+from ics2000.Devices import Device, Light, Dimmer, Optional, TemperatureHumiditySensor
 
+_LOGGER = logging.getLogger(__name__)
 
 def constraint_int(inp, min_val, max_val) -> int:
     if inp < min_val:
@@ -42,7 +43,7 @@ class Hub:
         self.ip_address = get_hub_ip()
 
     def login_user(self):
-        logging.debug("Logging in user")
+        _LOGGER.debug("Logging in user")
         url = f'{Hub.base_url}/account.php'
         params = {"action": "login", "email": self._email, "mac": self.mac.replace(":", ""),
                   "password_hash": self._password, "device_unique_id": "android", "platform": "Android"}
@@ -52,7 +53,7 @@ class Hub:
             self.aes = resp["homes"][0]["aes_key"]
             self._homeId = resp["homes"][0]["home_id"]
             if self.aes is not None:
-                logging.debug("Successfully got AES key")
+                _LOGGER.debug("Successfully got AES key")
                 self._connected = True
             else:
                 raise CoreException(f'Could not get AES key for user {self._email}')
@@ -76,18 +77,24 @@ class Hub:
                 decrypted = decrypted["module"]
                 name = decrypted["name"]
                 entity_id = decrypted["id"]
-                if decrypted["device"] not in device_type_values:
+                decrypted_device = decrypted["device"]
+                logging.debug(f'Device is {decrypted_device}')
+                if decrypted_device not in device_type_values:
                     self._devices.append(Device(name, entity_id, self))
                     continue
-                dev = DeviceType(decrypted["device"])
+                dev = DeviceType(decrypted_device)
+                logging.debug(f'Device type is {decrypted_device}')
                 if dev == DeviceType.LAMP:
-                    self._devices.append(Device(name, entity_id, self))
-                if dev == DeviceType.DIMMER:
+                    self._devices.append(Light(name, entity_id, self))
+                elif dev == DeviceType.DIMMER:
                     self._devices.append(Dimmer(name, entity_id, self))
-                if dev == DeviceType.OPEN_CLOSE:
-                    self._devices.append(Device(name, entity_id, self))
-                if dev == DeviceType.DIMMABLE_LAMP:
+                elif dev == DeviceType.OPEN_CLOSE:
+                    self._devices.append(Light(name, entity_id, self))
+                elif dev == DeviceType.DIMMABLE_LAMP:
                     self._devices.append(Dimmer(name, entity_id, self))
+                elif dev == DeviceType.ZIGBEE_TEMPERATURE_AND_HUMIDITY_SENSOR:
+                    self._devices.append(TemperatureHumiditySensor(name, entity_id, self))
+
             else:
                 pass  # TODO: log something here
 
@@ -97,7 +104,7 @@ class Hub:
 
     def send_command_tcp(self, command):
         url = f'{Hub.base_url}/command.php'
-        logging.info(f'Using TCP to send command to {url}')
+        _LOGGER.info(f'Using TCP to send command to {url}')
         params = {"action": "add", "email": self._email, "mac": self.mac.replace(":", ""),
                   "password_hash": self._password, "device_unique_id": "android", "command": command}
         response = requests.get(url, params=params)
@@ -105,7 +112,7 @@ class Hub:
             raise CoreException(f'Could not send command {command}: {response.text}')
 
     def send_command_udp(self, command):
-        logging.info(f'Using UDP to send command to {self.ip_address}')
+        _LOGGER.info(f'Using UDP to send command to {self.ip_address}')
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         sock.sendto(command, (self.ip_address, 2012))
         sock.close()
@@ -170,6 +177,18 @@ class Hub:
             return True if status[0] == 1 else False
         return False
 
+    def get_temperature(self, entity):
+        status = self.get_device_status(entity)
+        if len(status) >= 1:
+            return round(status[4]/100.0,2)
+        return -1
+
+    def get_humidity(self, entity):
+        status = self.get_device_status(entity)
+        if len(status) >= 1:
+            return round(status[11]/100.0,2)
+        return -1
+    
     def simple_command(self, entity, function, value):
         cmd = Command()
         cmd.setmac(self.mac)
@@ -187,7 +206,8 @@ class DeviceType(enum.Enum):
     LAMP = 1
     DIMMER = 2
     OPEN_CLOSE = 3
-    DIMMABLE_LAMP = 24
+    DIMMABLE_LAMP = 24,
+    ZIGBEE_TEMPERATURE_AND_HUMIDITY_SENSOR = 46
 
 
 def get_hub(mac, email, password) -> Optional[Hub]:

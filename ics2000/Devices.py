@@ -1,14 +1,15 @@
+from abc import ABC
 from typing import Optional
 import logging
 
+_LOGGER = logging.getLogger(__name__)
 
-class Device:
-
+class Device(ABC):
     def __init__(self, name, entity_id, hb):
         self._hub = hb
         self._name = name
         self._id = entity_id
-        logging.info(f'{str(self._name)} : {str(self._id)}')
+        _LOGGER.info(f'{str(self._name)} : {str(self._id)}')
 
     @property
     def id(self) -> int:
@@ -22,6 +23,7 @@ class Device:
     def name(self) -> str:
         return self._name
 
+class Light(Device):
     def turn_off(self):
         cmd = self._hub.getcmdswitch(self._id, False)
         self._hub.send_command(cmd.getcommand())
@@ -33,7 +35,6 @@ class Device:
     def get_status(self) -> Optional[bool]:
         return self._hub.get_lamp_status(self._id)
 
-
 class Dimmer(Device):
 
     def dim(self, level):
@@ -41,3 +42,13 @@ class Dimmer(Device):
             return
         cmd = super()._hub.getcmddim(super()._hub, level)
         super()._hub.send_command(cmd.getcommand())
+
+class TemperatureHumiditySensor(Device):
+
+    def get_temperature(self):
+        cmd = self._hub.get_temperature(super()._hub)
+        return super()._hub.send_command(cmd.getcommand())
+
+    def get_humidity(self):
+        cmd = self._hub.get_humidity(super()._hub)
+        return super()._hub.send_command(cmd.getcommand())
